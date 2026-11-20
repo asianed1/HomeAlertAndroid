@@ -37,8 +37,10 @@ android {
                 keyAlias = System.getenv("KEY_ALIAS") ?: keystoreProperties.getProperty("keyAlias")
                 keyPassword = System.getenv("KEY_PASSWORD") ?: keystoreProperties.getProperty("keyPassword")
             } else {
-                // Fallback to debug keystore if release keystore.properties is not yet generated
-                initWith(signingConfigs.getByName("debug"))
+                val debugStore = signingConfigs.getByName("debug").storeFile
+                if (debugStore != null && debugStore.exists()) {
+                    initWith(signingConfigs.getByName("debug"))
+                }
             }
         }
     }
@@ -47,7 +49,10 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("release")
+            val releaseSigning = signingConfigs.getByName("release")
+            if (releaseSigning.storeFile?.exists() == true) {
+                signingConfig = releaseSigning
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
