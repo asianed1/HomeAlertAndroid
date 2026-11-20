@@ -16,6 +16,7 @@ import javax.mail.internet.MimeBodyPart
 import javax.mail.internet.MimeMessage
 import javax.mail.internet.MimeMultipart
 import javax.net.SocketFactory
+import javax.net.ssl.SSLSocketFactory
 
 class GmailSmtpAlertSender {
 
@@ -45,8 +46,7 @@ class GmailSmtpAlertSender {
                 put("mail.smtp.port", "465")
                 put("mail.smtp.ssl.enable", "true")
                 if (socketFactory != null) {
-                    NetworkBoundSocketFactory.bind(socketFactory)
-                    put("mail.smtp.ssl.socketFactory.class", NetworkBoundSocketFactory::class.java.name)
+                    put("mail.smtp.ssl.socketFactory", NetworkBoundSSLSocketFactory(socketFactory))
                     put("mail.smtp.ssl.socketFactory.fallback", "false")
                 }
             } else {
@@ -54,8 +54,7 @@ class GmailSmtpAlertSender {
                 put("mail.smtp.starttls.enable", "true")
                 put("mail.smtp.starttls.required", "true")
                 if (socketFactory != null) {
-                    NetworkBoundSocketFactory.bind(socketFactory)
-                    put("mail.smtp.socketFactory.class", NetworkBoundSocketFactory::class.java.name)
+                    put("mail.smtp.socketFactory", socketFactory)
                     put("mail.smtp.socketFactory.fallback", "false")
                 }
             }
@@ -93,47 +92,57 @@ class GmailSmtpAlertSender {
             setContent(multipart)
         }
 
-        try {
-            Transport.send(message)
-        } finally {
-            NetworkBoundSocketFactory.clear()
-        }
+        Transport.send(message)
     }
 
     /**
-     * Bridges JavaMail's class-name-based SocketFactory lookup with Android's Network.socketFactory
-     * so SMTP traffic is bound strictly to Wi-Fi or Telco Cellular Network.
+     * Wraps Android's Network.socketFactory inside an SSLSocketFactory for SMTPS (port 465)
+     * without static getDefault() overrides or classloader reflection.
      */
-    class NetworkBoundSocketFactory : SocketFactory() {
-        companion object {
-            private val threadDelegate = ThreadLocal<SocketFactory?>()
+    private class NetworkBoundSSLSocketFactory(
+        private val networkSocketFactory: SocketFactory
+    ) : SSLSocketFactory() {
 
-            @Volatile
-            private var fallbackDelegate: SocketFactory? = null
+        private val baseSslFactory: SSLSocketFactory =
+            SSLSocketFactory.getDefault() as SSLSocketFactory
 
-            fun bind(factory: SocketFactory) {
-                threadDelegate.set(factory)
-                fallbackDelegate = factory
-            }
+        override fun getDefaultCipherSuites(): Array<String> = baseSslFactory.defaultCipherSuites
 
-            fun clear() {
-                threadDelegate.remove()
-            }
+        override fun getSupportedCipherSuites(): Array<String> = baseSslFactory.supportedCipherSuites
 
-            @JvmStatic
-            fun getDefault(): SocketFactory = NetworkBoundSocketFactory()
+        override fun createSocket(): Socket = networkSocketFactory.createSocket()
+
+        override fun createSocket(s: Socket?, host: String?, port: Int, autoClose: Boolean): Socket =
+            baseSslFactory.createSocket(s, host, port, autoClose)
+
+        override fun createSocket(host: String?, port: Int): Socket {
+            val raw = networkSocketFactory.createSocket(host, port)
+            return baseSslFactory.createSocket(raw, host, port, true)
         }
 
-        private val delegate: SocketFactory
-            get() = threadDelegate.get() ?: fallbackDelegate ?: SocketFactory.getDefault()
+        override fun createSocket(
+            host: String?,
+            port: Int,
+            localHost: InetAddress?,
+            localPort: Int
+        ): Socket {
+            val raw = networkSocketFactory.createSocket(host, port, localHost, localPort)
+            return baseSslFactory.createSocket(raw, host, port, true)
+        }
 
-        override fun createSocket(): Socket = delegate.createSocket()
-        override fun createSocket(host: String?, port: Int): Socket = delegate.createSocket(host, port)
-        override fun createSocket(host: String?, port: Int, localHost: InetAddress?, localPort: Int): Socket =
-            delegate.createSocket(host, port, localHost, localPort)
+        override fun createSocket(host: InetAddress?, port: Int): Socket {
+            val raw = networkSocketFactory.createSocket(host, port)
+            return baseSslFactory.createSocket(raw, host?.hostName, port, true)
+        }
 
-        override fun createSocket(host: InetAddress?, port: Int): Socket = delegate.createSocket(host, port)
-        override fun createSocket(address: InetAddress?, port: Int, localAddress: InetAddress?, localPort: Int): Socket =
-            delegate.createSocket(address, port, localAddress, localPort)
+        override fun createSocket(
+            address: InetAddress?,
+            port: Int,
+            localAddress: InetAddress?,
+            localPort: Int
+        ): Socket {
+            val raw = networkSocketFactory.createSocket(address, port, localAddress, localPort)
+            return baseSslFactory.createSocket(raw, address?.hostName, port, true)
+        }
     }
 }

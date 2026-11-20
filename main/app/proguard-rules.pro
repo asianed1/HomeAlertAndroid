@@ -44,8 +44,5 @@
 -dontwarn java.lang.management.**
 -dontwarn org.codehaus.mojo.animal_sniffer.**
 
-# Network-bound SMTP socket factory loaded via Class.forName by Jakarta Mail
--keep class com.homealert.android.network.GmailSmtpAlertSender$NetworkBoundSocketFactory { *; }
-
 # Application data models & JSON serialization
 -keep class com.homealert.android.data.model.** { *; }
