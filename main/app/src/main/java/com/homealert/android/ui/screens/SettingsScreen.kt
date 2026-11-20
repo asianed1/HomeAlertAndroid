@@ -13,7 +13,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.HelpOutline
+import androidx.compose.material.icons.automirrored.filled.HelpOutline
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -146,7 +146,7 @@ fun SettingsScreen(
                     ) {
                         Text("Telegram Bot Settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                         IconButton(onClick = { showBotFatherDialog = true }) {
-                            Icon(Icons.Default.HelpOutline, contentDescription = "@BotFather Setup Guide")
+                            Icon(Icons.AutoMirrored.Filled.HelpOutline, contentDescription = "@BotFather Setup Guide")
                         }
                     }
                     OutlinedTextField(

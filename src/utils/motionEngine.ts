@@ -223,7 +223,11 @@ export class WebMotionDetector {
     const cooldownRemainingSeconds =
       elapsed < cooldownMs ? Math.max(1, Math.ceil((cooldownMs - elapsed) / 1000)) : 0;
 
-    if (changedAreaPercent >= sensitivityPercent && boundingBox) {
+    if (cooldownRemainingSeconds > 0) {
+      this.consecutiveFrames = 0;
+      this.activeSequenceOriginLabel = null;
+      this.lastOriginZoneSeenMs = 0;
+    } else if (changedAreaPercent >= sensitivityPercent && boundingBox) {
       const hadPriorZoneInWindow = this.activeSequenceOriginLabel !== null;
       if (!boundingBox.inGuardband) {
         if (!hadPriorZoneInWindow) {
@@ -241,7 +245,7 @@ export class WebMotionDetector {
           (this.consecutiveFrames >= this.requiredConsecutiveFrames || hadPriorZoneInWindow)
         : this.consecutiveFrames >= this.requiredConsecutiveFrames;
 
-      if (!previewOnly && readyToTrigger && cooldownRemainingSeconds === 0) {
+      if (!previewOnly && readyToTrigger) {
         this.lastTriggeredMs = nowMs;
         this.consecutiveFrames = 0;
         this.activeSequenceOriginLabel = null;

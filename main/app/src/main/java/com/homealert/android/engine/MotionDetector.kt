@@ -203,7 +203,11 @@ class MotionDetector(
             0
         }
 
-        if (changedPercent >= config.sensitivityAreaPercent && boundingBox != null) {
+        if (cooldownRemaining > 0) {
+            consecutiveMotionCount = 0
+            activeSequenceOriginLabel = null
+            lastOriginZoneSeenMs = 0L
+        } else if (changedPercent >= config.sensitivityAreaPercent && boundingBox != null) {
             val hadPriorZoneInWindow = activeSequenceOriginLabel != null
             if (!boundingBox.inGuardband) {
                 if (!hadPriorZoneInWindow) {
@@ -224,7 +228,7 @@ class MotionDetector(
                 consecutiveMotionCount >= requiredConsecutiveFrames
             }
 
-            if (!previewOnly && readyToTrigger && cooldownRemaining == 0) {
+            if (!previewOnly && readyToTrigger) {
                 lastTriggerTimestampMs = timestampMs
                 consecutiveMotionCount = 0
                 activeSequenceOriginLabel = null

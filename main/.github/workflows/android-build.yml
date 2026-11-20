@@ -49,6 +49,34 @@ jobs:
       - name: Run Kotlin Unit Tests
         run: gradle testDebugUnitTest --stacktrace
 
+      - name: Summarize Unit Test Failures
+        if: failure()
+        run: |
+          echo "### Unit Test Failures" >> "$GITHUB_STEP_SUMMARY"
+          python3 - << 'EOF' >> "$GITHUB_STEP_SUMMARY"
+          import glob, xml.etree.ElementTree as ET
+          found = False
+          for path in sorted(glob.glob("app/build/test-results/testDebugUnitTest/TEST-*.xml")):
+              root = ET.parse(path).getroot()
+              for tc in root.findall("testcase"):
+                  for fail in tc.findall("failure") + tc.findall("error"):
+                      found = True
+                      print(f"- **{tc.attrib.get('classname')}.{tc.attrib.get('name')}**: `{fail.attrib.get('message', '')}`")
+                      if fail.text:
+                          print("```")
+                          print("\n".join(fail.text.strip().splitlines()[:20]))
+                          print("```")
+          if not found:
+              print("No JUnit XML failure entries found; check the Gradle build log above.")
+          EOF
+
+      - name: Upload Test Reports on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-reports
+          path: app/build/reports/tests/
+
       - name: Build Release APK
         run: gradle assembleRelease --stacktrace
 
