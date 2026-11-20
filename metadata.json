@@ -1,0 +1,6 @@
+{
+  "name": "HomeAlertAndroid",
+  "description": "Standalone sideloaded Android home security & passive motion-detector app in Kotlin, Jetpack Compose (Material 3), CameraX YUV_420_888, Stealth Blackout Mode, and 3-tier Wi-Fi → Telco Data → SMS auto-failover.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

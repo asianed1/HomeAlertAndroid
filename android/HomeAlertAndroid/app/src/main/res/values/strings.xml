@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">HomeAlert</string>
+    <string name="notification_channel_monitoring">Active Camera Monitoring</string>
+    <string name="notification_channel_alerts">Motion Alert Dispatch</string>
+</resources>
