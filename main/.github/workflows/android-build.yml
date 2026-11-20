@@ -2,9 +2,7 @@ name: Build Android APK & AAB
 
 on:
   push:
-    branches: [ main, master ]
   pull_request:
-    branches: [ main, master ]
   workflow_dispatch:
 
 jobs:
@@ -20,6 +18,9 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
 
       - name: Set up Gradle 8.9
         uses: gradle/actions/setup-gradle@v4

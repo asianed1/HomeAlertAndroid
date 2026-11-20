@@ -5,7 +5,7 @@ import JSZip from 'jszip';
 import { createServer as createViteServer } from 'vite';
 
 const PORT = Number(process.env.PORT || 3000);
-const ANDROID_ROOT = path.resolve(process.cwd(), 'android', 'HomeAlertAndroid');
+const ANDROID_ROOT = path.resolve(process.cwd(), 'main');
 
 interface AndroidFileEntry {
   path: string;
