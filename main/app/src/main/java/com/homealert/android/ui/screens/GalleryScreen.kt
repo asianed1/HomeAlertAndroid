@@ -34,6 +34,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -281,9 +282,9 @@ private fun FullScreenSnapshotViewer(
 }
 
 @Composable
-private fun rememberUriBitmap(uri: Uri, maxSampleWidth: Int) =
-    produceState<Bitmap?>(initialValue = null, uri, maxSampleWidth) {
-        val context = LocalContext.current
+private fun rememberUriBitmap(uri: Uri, maxSampleWidth: Int): State<Bitmap?> {
+    val context = LocalContext.current
+    return produceState<Bitmap?>(initialValue = null, uri, maxSampleWidth) {
         value = withContext(Dispatchers.IO) {
             runCatching {
                 val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
@@ -323,3 +324,4 @@ private fun rememberUriBitmap(uri: Uri, maxSampleWidth: Int) =
             }.getOrNull()
         }
     }
+}
